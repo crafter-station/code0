@@ -1,0 +1,21 @@
+{
+  "name": "code0",
+  "version": "1.0.0",
+  "description": "A code agent that creates PRs using Together Code Sandbox",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "setup": "node setup.js",
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "demo": "node demo.js"
+  },
+  "dependencies": {
+    "@codesandbox/sdk": "^1.0.0",
+    "@octokit/rest": "^20.0.2",
+    "simple-git": "^3.20.0"
+  },
+  "keywords": ["code-agent", "pr-automation", "codesandbox"],
+  "author": "code0",
+  "license": "MIT"
+} 
