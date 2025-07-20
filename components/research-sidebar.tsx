@@ -94,7 +94,11 @@ export function ResearchSidebar({
 					throw new Error("Failed to fetch research items");
 				}
 				const data = await response.json();
-				setResearchItems(data);
+				// Filter to only show ultra deep research (multi-provider)
+				const ultraDeepItems = data.filter((item: ResearchItem) => 
+					item.type === "multi-provider"
+				);
+				setResearchItems(ultraDeepItems);
 			} catch (err) {
 				setError(err instanceof Error ? err.message : "Unknown error");
 				console.error("Failed to fetch research items:", err);

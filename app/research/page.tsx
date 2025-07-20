@@ -3,6 +3,7 @@
 import {
 	quickResearchAction,
 	startResearchAction,
+	startMultiProviderResearchAction,
 } from "@/app/actions/research-actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +15,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Header from "@/components/Header";
 import type {
 	QuickResearchActionState,
 	StartResearchActionState,
+	MultiProviderResearchActionState,
 } from "@/lib/action-types";
 import { useActionState, useState } from "react";
+import { Activity } from "lucide-react";
+import Link from "next/link";
 
 const initialStartState: StartResearchActionState = {
 	input: { query: "", depth: "deep" },
@@ -27,6 +32,11 @@ const initialStartState: StartResearchActionState = {
 
 const initialQuickState: QuickResearchActionState = {
 	input: { query: "" },
+	output: { success: false },
+};
+
+const initialMultiProviderState: MultiProviderResearchActionState = {
+	input: { query: "", depth: "comprehensive", enabledProviders: ["openai", "anthropic", "google", "xai"] },
 	output: { success: false },
 };
 
@@ -39,20 +49,46 @@ export default function ResearchPage() {
 		quickResearchAction,
 		initialQuickState,
 	);
-	const [activeTab, setActiveTab] = useState<"deep" | "quick">("deep");
+	const [multiProviderState, multiProviderAction, isMultiProviderPending] = useActionState(
+		startMultiProviderResearchAction,
+		initialMultiProviderState,
+	);
+	const [activeTab, setActiveTab] = useState<"deep" | "quick" | "ultra">("ultra");
 
 	return (
-		<div className="container mx-auto space-y-8 py-8">
-			<div className="space-y-4 text-center">
-				<h1 className="font-bold text-4xl">Deep Research Pipeline</h1>
-				<p className="text-gray-600 text-xl dark:text-gray-400">
-					AI-powered research assistant using advanced planning, search, and
-					reflection
-				</p>
-			</div>
+		<div className="min-h-screen bg-background">
+			<Header />
+			<div className="container mx-auto space-y-8 py-8">
+				<div className="space-y-4 text-center">
+					<h1 className="font-bold text-4xl">Ultra Deep Research Pipeline</h1>
+					<p className="text-gray-600 text-xl dark:text-gray-400">
+						AI-powered research assistant using advanced planning, search, and
+						reflection with multiple AI providers
+					</p>
+					<div className="flex justify-center">
+						<Link 
+							href="/providers/live" 
+							className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+						>
+							<Activity className="h-4 w-4" />
+							View Live Provider States →
+						</Link>
+					</div>
+				</div>
 
 			{/* Tab Navigation */}
 			<div className="flex space-x-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+				<button
+					type="button"
+					onClick={() => setActiveTab("ultra")}
+					className={`flex-1 rounded-md px-4 py-2 font-medium text-sm transition-colors ${
+						activeTab === "ultra"
+							? "bg-white text-gray-900 shadow dark:bg-gray-700 dark:text-gray-100"
+							: "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+					}`}
+				>
+					Ultra Deep Research
+				</button>
 				<button
 					type="button"
 					onClick={() => setActiveTab("deep")}
@@ -76,6 +112,101 @@ export default function ResearchPage() {
 					Quick Research
 				</button>
 			</div>
+
+			{activeTab === "ultra" && (
+				<Card>
+					<CardHeader>
+						<CardTitle>Ultra Deep Research Pipeline</CardTitle>
+						<CardDescription>
+							Revolutionary multi-provider research that leverages 4 leading AI models (OpenAI, Anthropic, Google, xAI) 
+							working in parallel to provide comprehensive analysis from multiple perspectives. 
+							This is the most thorough research option available.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<form action={multiProviderAction} className="space-y-6">
+							<div className="space-y-2">
+								<Label htmlFor="ultra-query">Research Question</Label>
+								<Input
+									id="ultra-query"
+									name="query"
+									placeholder="e.g., What are the implications of artificial general intelligence on society?"
+									defaultValue={multiProviderState.input.query}
+									required
+								/>
+							</div>
+
+							<div className="space-y-2">
+								<Label>Research Depth</Label>
+								<select
+									name="depth"
+									defaultValue={multiProviderState.input.depth}
+									className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									<option value="comprehensive">Comprehensive (Recommended)</option>
+									<option value="deep">Deep</option>
+									<option value="surface">Surface</option>
+								</select>
+							</div>
+
+							<div className="space-y-3">
+								<Label>AI Providers (All Selected for Maximum Coverage)</Label>
+								<div className="grid grid-cols-2 gap-3">
+									{[
+										{ id: "openai", label: "OpenAI GPT-4", icon: "🤖" },
+										{ id: "anthropic", label: "Anthropic Claude", icon: "🧠" },
+										{ id: "google", label: "Google Gemini", icon: "🔍" },
+										{ id: "xai", label: "xAI Grok", icon: "🚀" },
+									].map((provider) => (
+										<div key={provider.id} className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/50">
+											<input
+												type="checkbox"
+												name="providers"
+												value={provider.id}
+												defaultChecked={true}
+												className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+											/>
+											<span className="text-sm font-medium">
+												{provider.icon} {provider.label}
+											</span>
+										</div>
+									))}
+								</div>
+							</div>
+
+							{multiProviderState.output.error && (
+								<div className="text-destructive text-sm">
+									{multiProviderState.output.error}
+								</div>
+							)}
+
+							{multiProviderState.output.researchId && (
+								<div className="space-y-2">
+									<div className="text-green-600 text-sm">
+										✅ Ultra deep research started successfully!
+									</div>
+									<a
+										href={`/chat/${multiProviderState.output.researchId}`}
+										className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
+									>
+										View Progress →
+									</a>
+								</div>
+							)}
+
+							<Button
+								type="submit"
+								disabled={isMultiProviderPending}
+								className="w-full"
+							>
+								{isMultiProviderPending
+									? "Starting Ultra Deep Research..."
+									: "Start Ultra Deep Research"}
+							</Button>
+						</form>
+					</CardContent>
+				</Card>
+			)}
 
 			{activeTab === "deep" && (
 				<Card>
