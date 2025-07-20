@@ -1,8 +1,6 @@
 "use client";
 
 import {
-	type QuickResearchActionState,
-	type StartResearchActionState,
 	quickResearchAction,
 	startResearchAction,
 } from "@/app/actions/research-actions";
@@ -16,6 +14,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type {
+	QuickResearchActionState,
+	StartResearchActionState,
+} from "@/lib/action-types";
 import { useActionState, useState } from "react";
 
 const initialStartState: StartResearchActionState = {

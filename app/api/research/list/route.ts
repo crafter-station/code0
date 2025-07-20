@@ -21,7 +21,7 @@ export async function GET() {
 
 				return {
 					id: state.id,
-					title: state.topic || state.title || "Untitled Research",
+					title: state.originalQuery || "Untitled Research",
 					timestamp:
 						state.createdAt || state.updatedAt || new Date().toISOString(),
 					status: state.status || "completed",
@@ -50,8 +50,12 @@ export async function GET() {
 
 		// Combine and filter valid states
 		const allStates = [
-			...singleResearchStates.filter(Boolean),
-			...multiResearchStates.filter(Boolean),
+			...singleResearchStates.filter(
+				(state): state is NonNullable<typeof state> => state !== null,
+			),
+			...multiResearchStates.filter(
+				(state): state is NonNullable<typeof state> => state !== null,
+			),
 		];
 
 		// Sort by timestamp, newest first
