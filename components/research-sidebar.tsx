@@ -1,6 +1,20 @@
 "use client";
 
-import { CrafterIcon, GithubIcon } from "@/components/icons";
+import {
+	AnthropicIcon,
+	CrafterIcon,
+	GeminiIcon,
+	GithubIcon,
+	OpenAIIcon,
+	XAIIcon,
+} from "@/components/icons";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
 	Sidebar,
 	SidebarContent,
@@ -13,36 +27,89 @@ import {
 	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-import { MessageSquare, Plus } from "lucide-react";
+import type { ProviderName } from "@/lib/ai-providers";
+import { useClerk, useUser } from "@clerk/nextjs";
+import {
+	ChevronUp,
+	LogOut,
+	MessageSquare,
+	Plus,
+	Settings,
+	Sparkles,
+	User,
+} from "lucide-react";
 import type * as React from "react";
+import { useEffect, useState } from "react";
 
-// Mock data for previous chats
-const mockChats = [
-	{
-		id: "1",
-		title: "Climate Change Impact on Agriculture",
-		timestamp: "2 hours ago",
-	},
-	{
-		id: "2",
-		title: "Quantum Computing Applications",
-		timestamp: "1 day ago",
-	},
-	{
-		id: "3",
-		title: "AI Ethics in Healthcare",
-		timestamp: "3 days ago",
-	},
-	{
-		id: "4",
-		title: "Renewable Energy Storage Solutions",
-		timestamp: "1 week ago",
-	},
-];
+interface ResearchItem {
+	id: string;
+	title: string;
+	timestamp: string;
+	status: string;
+	type?: "single" | "multi-provider";
+	providers?: ProviderName[];
+}
+
+const ProviderIcons: Record<
+	ProviderName,
+	React.ComponentType<{ className?: string }>
+> = {
+	openai: OpenAIIcon,
+	anthropic: AnthropicIcon,
+	google: GeminiIcon,
+	xai: XAIIcon,
+};
+
+function formatTimestamp(timestamp: string): string {
+	const date = new Date(timestamp);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+	const diffDays = Math.floor(diffHours / 24);
+
+	if (diffHours < 1) return "Just now";
+	if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+	if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+	if (diffDays < 30)
+		return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? "s" : ""} ago`;
+	return date.toLocaleDateString();
+}
 
 export function ResearchSidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
+	const { user } = useUser();
+	const { signOut } = useClerk();
+	const [researchItems, setResearchItems] = useState<ResearchItem[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchResearchItems = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const response = await fetch("/api/research/list");
+				if (!response.ok) {
+					throw new Error("Failed to fetch research items");
+				}
+				const data = await response.json();
+				setResearchItems(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Unknown error");
+				console.error("Failed to fetch research items:", err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchResearchItems();
+	}, []);
+
+	const handleSignOut = () => {
+		signOut({ redirectUrl: "/" });
+	};
+
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
@@ -80,36 +147,78 @@ export function ResearchSidebar({
 						Your reports
 					</SidebarGroupLabel>
 
-					{mockChats.length > 0 ? (
+					{isLoading ? (
+						<p className="text-left text-base text-muted-foreground group-data-[collapsible=icon]:hidden">
+							Loading...
+						</p>
+					) : error ? (
+						<p className="text-left text-base text-destructive group-data-[collapsible=icon]:hidden">
+							Error: {error}
+						</p>
+					) : researchItems.length > 0 ? (
 						<SidebarMenu>
-							{mockChats.map((chat) => (
-								<SidebarMenuItem key={chat.id}>
-									<SidebarMenuButton
-										size="lg"
-										className="justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
-										tooltip={chat.title}
-									>
-										<a
-											href={`/chat/${chat.id}`}
-											className="flex flex-row items-center gap-2"
+							{researchItems.map((item) => {
+								const isMultiProvider = item.type === "multi-provider";
+								const providers = item.providers || [];
+
+								return (
+									<SidebarMenuItem key={item.id}>
+										<SidebarMenuButton
+											size="lg"
+											className="h-16 justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
+											tooltip={item.title}
 										>
-											<MessageSquare className="h-4 w-4 text-muted-foreground" />
-											<div className="flex flex-col items-start gap-1 group-data-[collapsible=icon]:hidden">
-												<span className="w-full max-w-[22ch] truncate text-ellipsis font-medium text-foreground text-sm">
-													{chat.title}
-												</span>
-												<span className="text-muted-foreground text-xs">
-													{chat.timestamp}
-												</span>
-											</div>
-										</a>
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							))}
+											<a
+												href={`/chat/${item.id}`}
+												className="flex w-full flex-row items-center gap-2"
+											>
+												{isMultiProvider ? (
+													<Sparkles className="h-4 w-4 text-primary" />
+												) : (
+													<MessageSquare className="h-4 w-4 text-muted-foreground" />
+												)}
+												<div className="flex flex-1 flex-col items-start gap-1 group-data-[collapsible=icon]:hidden">
+													<div className="flex w-full items-center gap-2">
+														<span className="max-w-[16ch] flex-1 truncate text-ellipsis font-medium text-foreground text-sm">
+															{item.title}
+														</span>
+														{isMultiProvider && (
+															<div className="flex items-center gap-1">
+																{providers.slice(0, 3).map((provider) => {
+																	const IconComponent = ProviderIcons[provider];
+																	return IconComponent ? (
+																		<IconComponent
+																			key={provider}
+																			className="h-3 w-3"
+																		/>
+																	) : null;
+																})}
+																{providers.length > 3 && (
+																	<span className="text-muted-foreground text-xs">
+																		+{providers.length - 3}
+																	</span>
+																)}
+															</div>
+														)}
+													</div>
+													<span className="text-muted-foreground text-xs">
+														{formatTimestamp(item.timestamp)}
+													</span>
+													{isMultiProvider && (
+														<span className="font-medium text-primary text-xs">
+															Ultra Deep Research
+														</span>
+													)}
+												</div>
+											</a>
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								);
+							})}
 						</SidebarMenu>
 					) : (
 						<p className="text-left text-base text-muted-foreground group-data-[collapsible=icon]:hidden">
-							No chats yet.
+							No research reports yet.
 						</p>
 					)}
 				</SidebarGroup>
@@ -137,19 +246,58 @@ export function ResearchSidebar({
 				</div>
 
 				<div className="flex flex-row items-center gap-2 border-border border-t px-5 pt-3">
-					<SidebarMenuButton
-						tooltip="Railly Hugo"
-						className="w-full justify-start p-0"
-					>
-						<div className="flex items-center gap-2">
-							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-chart-1 font-medium text-primary-foreground text-sm">
-								RH
-							</div>
-							<span className="font-medium text-foreground text-sm group-data-[collapsible=icon]:hidden">
-								Railly Hugo
-							</span>
-						</div>
-					</SidebarMenuButton>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<SidebarMenuButton
+								tooltip={
+									user?.fullName ||
+									user?.emailAddresses[0]?.emailAddress ||
+									"User"
+								}
+								className="w-full justify-start p-0 data-[state=open]:bg-accent"
+							>
+								<div className="flex w-full items-center justify-between gap-2">
+									<div className="flex items-center gap-2">
+										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-chart-1 font-medium text-primary-foreground text-sm">
+											{user?.firstName?.charAt(0) ||
+												user?.emailAddresses[0]?.emailAddress?.charAt(0) ||
+												"U"}
+										</div>
+										<span className="font-medium text-foreground text-sm group-data-[collapsible=icon]:hidden">
+											{user?.firstName ||
+												user?.emailAddresses[0]?.emailAddress?.split("@")[0] ||
+												"User"}
+										</span>
+									</div>
+									<ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+								</div>
+							</SidebarMenuButton>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent side="top" align="end" className="w-56">
+							<DropdownMenuItem className="flex items-center gap-2">
+								<User className="h-4 w-4" />
+								<div className="flex flex-col">
+									<span className="text-sm">{user?.fullName || "User"}</span>
+									<span className="text-muted-foreground text-xs">
+										{user?.emailAddresses[0]?.emailAddress}
+									</span>
+								</div>
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem className="flex items-center gap-2">
+								<Settings className="h-4 w-4" />
+								Settings
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								className="flex items-center gap-2 text-destructive focus:text-destructive"
+								onClick={handleSignOut}
+							>
+								<LogOut className="h-4 w-4" />
+								Sign out
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</SidebarFooter>
 

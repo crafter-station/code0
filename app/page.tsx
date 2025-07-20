@@ -1,5 +1,6 @@
 "use client";
 
+import { startMultiProviderResearchAction } from "@/app/actions/research-actions";
 import {
 	AnthropicIcon,
 	CrafterIcon,
@@ -10,9 +11,46 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Github } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function Home() {
+	const router = useRouter();
+	const [isStarting, setIsStarting] = useState(false);
+	const [query, setQuery] = useState("");
+
+	const handleStartResearch = async () => {
+		if (!query.trim()) return;
+
+		setIsStarting(true);
+		try {
+			const formData = new FormData();
+			formData.append("query", query);
+			formData.append("depth", "comprehensive");
+			formData.append("providers", "openai");
+			formData.append("providers", "anthropic");
+			formData.append("providers", "google");
+			formData.append("providers", "xai");
+
+			const result = await startMultiProviderResearchAction(
+				{
+					input: { query: "", depth: "comprehensive", enabledProviders: [] },
+					output: { success: false },
+				},
+				formData,
+			);
+
+			if (result.output.success) {
+				// Redirect to the research page with the ID
+				router.push(`/chat/${result.output.data.researchId}`);
+			}
+		} catch (error) {
+			console.error("Failed to start research:", error);
+		} finally {
+			setIsStarting(false);
+		}
+	};
+
 	return (
 		<div className="relative flex size-full min-h-screen flex-col items-center justify-center">
 			{/* Main Content */}
@@ -44,16 +82,30 @@ export default function Home() {
 					</p>
 				</div>
 
-				{/* CTA Button */}
-				<div className="flex flex-col gap-2">
-					<Link href="/chat">
+				{/* Research Input */}
+				<div className="flex w-full max-w-xl flex-col gap-3">
+					<div className="flex gap-2">
+						<input
+							type="text"
+							value={query}
+							onChange={(e) => setQuery(e.target.value)}
+							placeholder="What would you like to research?"
+							className="flex-1 rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+							onKeyPress={(e) => e.key === "Enter" && handleStartResearch()}
+						/>
 						<Button
 							size="lg"
-							className="cursor-pointer gap-1.5 rounded border-[0.5px] px-5 py-2"
+							onClick={handleStartResearch}
+							disabled={!query.trim() || isStarting}
+							className="gap-1.5 rounded-lg border-[0.5px] px-6 py-3"
 						>
-							<p className="font-medium text-base">Generate Ultra Report</p>
+							{isStarting ? (
+								<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+							) : (
+								<p className="font-medium text-base">Start Research</p>
+							)}
 						</Button>
-					</Link>
+					</div>
 					<p className="pb-4 text-center text-muted-foreground text-xs">
 						Fully{" "}
 						<a
