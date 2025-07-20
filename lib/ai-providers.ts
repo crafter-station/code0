@@ -76,11 +76,11 @@ export async function getProviderModel(
 		}
 		case "google": {
 			const { google } = await import("@ai-sdk/google");
-			return google("gemini-1.5-pro");
+			return google("gemini-2.5-pro");
 		}
 		case "xai": {
 			const { xai } = await import("@ai-sdk/xai");
-			return xai("grok-beta");
+			return xai("grok-3");
 		}
 		default: {
 			const { openai: defaultOpenai } = await import("@ai-sdk/openai");
