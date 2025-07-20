@@ -24,8 +24,12 @@ export default function ResearchPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	// Poll for updates every 5 seconds
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		if (!researchId) return;
+
+		let retryCount = 0;
+		const maxRetries = 12; // Try for 1 minute (5s * 12 = 60s)
 
 		const fetchResearch = async () => {
 			try {
@@ -33,10 +37,15 @@ export default function ResearchPage() {
 
 				if (!response.ok) {
 					if (response.status === 404) {
-						setError("Research not found");
-					} else {
-						setError("Failed to fetch research");
+						retryCount++;
+						if (retryCount >= maxRetries) {
+							setError("Research not found after multiple attempts");
+							setIsLoading(false);
+						}
+						// Don't set error immediately for 404s - research might still be creating
+						return;
 					}
+					setError("Failed to fetch research");
 					setIsLoading(false);
 					return;
 				}
@@ -44,6 +53,7 @@ export default function ResearchPage() {
 				const data: ResearchResponse = await response.json();
 				setResearch(data);
 				setIsLoading(false);
+				retryCount = 0; // Reset retry count on success
 			} catch (err) {
 				setError(
 					err instanceof Error ? err.message : "Failed to fetch research",
@@ -55,11 +65,15 @@ export default function ResearchPage() {
 		// Initial load
 		fetchResearch();
 
-		// Set up polling interval for in-progress research
+		// Set up polling interval
 		const interval = setInterval(() => {
+			// Keep polling if:
+			// 1. No research found yet (might still be creating)
+			// 2. Research exists but not completed/failed
 			if (
-				research?.data.status !== "completed" &&
-				research?.data.status !== "failed"
+				!research ||
+				(research?.data.status !== "completed" &&
+					research?.data.status !== "failed")
 			) {
 				fetchResearch();
 			}
@@ -73,7 +87,16 @@ export default function ResearchPage() {
 			<div className="flex min-h-screen items-center justify-center">
 				<div className="flex flex-col items-center gap-4">
 					<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-					<p className="text-muted-foreground">Loading research...</p>
+					<div className="text-center">
+						<p className="text-muted-foreground">Loading research...</p>
+						<p className="mt-2 text-muted-foreground text-sm">
+							{researchId &&
+							typeof researchId === "string" &&
+							researchId.startsWith("multi_research_")
+								? "Initializing AI models for Ultra Deep Research..."
+								: "Loading research data..."}
+						</p>
+					</div>
 				</div>
 			</div>
 		);

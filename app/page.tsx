@@ -1,6 +1,4 @@
 "use client";
-
-import { startMultiProviderResearchAction } from "@/app/actions/research-actions";
 import {
 	AnthropicIcon,
 	CrafterIcon,
@@ -20,35 +18,7 @@ export default function Home() {
 	const [query, setQuery] = useState("");
 
 	const handleStartResearch = async () => {
-		if (!query.trim()) return;
-
-		setIsStarting(true);
-		try {
-			const formData = new FormData();
-			formData.append("query", query);
-			formData.append("depth", "comprehensive");
-			formData.append("providers", "openai");
-			formData.append("providers", "anthropic");
-			formData.append("providers", "google");
-			formData.append("providers", "xai");
-
-			const result = await startMultiProviderResearchAction(
-				{
-					input: { query: "", depth: "comprehensive", enabledProviders: [] },
-					output: { success: false },
-				},
-				formData,
-			);
-
-			if (result.output.success) {
-				// Redirect to the research page with the ID
-				router.push(`/chat/${result.output.data.researchId}`);
-			}
-		} catch (error) {
-			console.error("Failed to start research:", error);
-		} finally {
-			setIsStarting(false);
-		}
+		router.push("/chat");
 	};
 
 	return (
@@ -84,15 +54,7 @@ export default function Home() {
 
 				{/* Research Input */}
 				<div className="flex w-full max-w-xl flex-col gap-3">
-					<div className="flex gap-2">
-						<input
-							type="text"
-							value={query}
-							onChange={(e) => setQuery(e.target.value)}
-							placeholder="What would you like to research?"
-							className="flex-1 rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-							onKeyPress={(e) => e.key === "Enter" && handleStartResearch()}
-						/>
+					<div className="flex justify-center gap-2">
 						<Button
 							size="lg"
 							onClick={handleStartResearch}
