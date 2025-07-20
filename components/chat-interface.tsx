@@ -32,7 +32,7 @@ export function ChatInterface() {
 		object: questionsData,
 		submit: submitQuestion,
 		isLoading: isGeneratingQuestions,
-	} = useObject({
+	} = useObject<RefinementQuestionsType>({
 		api: "/api/ai/completion/questions",
 		schema: refinementQuestionsSchema,
 	});
@@ -40,7 +40,15 @@ export function ChatInterface() {
 	// Update local state when streamed data changes
 	React.useEffect(() => {
 		if (questionsData?.questions) {
-			setQuestions(questionsData.questions);
+			// Filter out questions that don't have all required properties
+			const validQuestions = questionsData.questions.filter(
+				(q): q is { id: string; question: string; placeholder: string } =>
+					q !== undefined &&
+					typeof q.id === "string" &&
+					typeof q.question === "string" &&
+					typeof q.placeholder === "string",
+			);
+			setQuestions(validQuestions);
 		}
 	}, [questionsData]);
 
