@@ -58,7 +58,6 @@ export default function Home() {
 						<Button
 							size="lg"
 							onClick={handleStartResearch}
-							disabled={!query.trim() || isStarting}
 							className="gap-1.5 rounded-lg border-[0.5px] px-6 py-3"
 						>
 							{isStarting ? (
