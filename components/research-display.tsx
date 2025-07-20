@@ -346,7 +346,8 @@ function MultiProviderResearchDisplay({
 							{/* Individual Provider Tabs */}
 							{providers.map((provider) => {
 								const providerResult = data.providerResults?.[provider];
-								const IconComponent = ProviderIcons[provider];
+								const providerName = provider as ProviderName;
+								const IconComponent = ProviderIcons[providerName];
 
 								return (
 									<TabsContent key={provider} value={provider}>
@@ -354,7 +355,8 @@ function MultiProviderResearchDisplay({
 											<div className="mb-4 flex items-center gap-2">
 												{IconComponent && <IconComponent className="h-5 w-5" />}
 												<h3 className="font-semibold">
-													{AI_PROVIDERS[provider]?.name || provider} Analysis
+													{AI_PROVIDERS[providerName]?.name || provider}{" "}
+													Analysis
 												</h3>
 												{getStatusIcon(providerResult?.status || "planning")}
 											</div>
@@ -380,7 +382,7 @@ function MultiProviderResearchDisplay({
 											<div className="mt-6 border-border border-t pt-4">
 												<div className="text-muted-foreground text-sm">
 													<strong>Strengths:</strong>{" "}
-													{AI_PROVIDERS[provider]?.strengths.join(", ")}
+													{AI_PROVIDERS[providerName]?.strengths.join(", ")}
 												</div>
 												{providerResult && (
 													<div className="mt-2 grid grid-cols-3 gap-4 text-sm">
