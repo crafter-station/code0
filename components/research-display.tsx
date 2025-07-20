@@ -309,7 +309,8 @@ function MultiProviderResearchDisplay({
 									</TabsTrigger>
 								)}
 								{providers.map((provider) => {
-									const IconComponent = ProviderIcons[provider];
+									const providerName = provider as ProviderName;
+									const IconComponent = ProviderIcons[providerName];
 									return (
 										<TabsTrigger
 											key={provider}
@@ -317,7 +318,7 @@ function MultiProviderResearchDisplay({
 											className="flex items-center gap-2"
 										>
 											{IconComponent && <IconComponent className="h-4 w-4" />}
-											{AI_PROVIDERS[provider]?.name || provider}
+											{AI_PROVIDERS[providerName]?.name || provider}
 										</TabsTrigger>
 									);
 								})}
