@@ -6,6 +6,8 @@ import {
 	OpenAIIcon,
 	PerplexityIcon,
 } from "@/components/icons";
+import { MarkdownContent } from "@/components/markdown-content";
+import { ModelResponseTabs } from "@/components/model-response-tabs";
 import { RefinementQuestions } from "@/components/refinement-questions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,12 +22,63 @@ export function ChatInterface() {
 	const [isGenerating, setIsGenerating] = React.useState(false);
 	const [showRefinement, setShowRefinement] = React.useState(false);
 	const [originalQuestion, setOriginalQuestion] = React.useState("");
+	const [messages, setMessages] = React.useState<
+		Array<{
+			id: string;
+			role: "user" | "assistant";
+			content: string;
+			showTabs?: boolean;
+		}>
+	>([
+		{
+			id: crypto.randomUUID(),
+			role: "assistant",
+			content: `# 🚀 Asistente de Investigación IA
+
+¡Hola! Soy tu asistente de investigación avanzado. Puedo ayudarte con:
+
+## 🔍 Capacidades Principales
+- **Análisis de código** en múltiples lenguajes
+- **Investigación técnica** profunda
+- **Documentación** estructurada
+- **Ejemplos prácticos** y tutoriales
+
+### 💡 Tip
+Escribe tu pregunta y obtén respuestas detalladas con ejemplos de código, referencias y análisis completo.
+
+> ¿Qué te gustaría investigar hoy?`,
+		},
+	]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (message.trim()) {
-			setOriginalQuestion(message);
-			setShowRefinement(true);
+			setMessages((prev) => [
+				...prev,
+				{ id: crypto.randomUUID(), role: "user", content: message },
+			]);
+			// Simular respuesta con tabs de modelos
+			setTimeout(() => {
+				setMessages((prev) => [
+					...prev,
+					{
+						id: crypto.randomUUID(),
+						role: "assistant",
+						content: `# 🤖 Análisis Multi-Modelo Completado
+
+Tu consulta **"${message}"** ha sido procesada por múltiples modelos de IA. Revisa las respuestas en las pestañas superiores para obtener diferentes perspectivas y enfoques.
+
+## 🎯 Resumen Rápido
+- **Grok**: Análisis avanzado con razonamiento profundo
+- **Gemini**: Perspectiva multimodal y creativa  
+- **OpenAI**: Enfoque estructurado y metodológico
+- **Resumen**: Síntesis unificada de todas las respuestas
+
+*Selecciona una pestaña arriba para ver la respuesta detallada de cada modelo.*`,
+						showTabs: true,
+					},
+				]);
+			}, 1500);
 			setMessage("");
 		}
 	};
@@ -95,8 +148,8 @@ export function ChatInterface() {
 			</header>
 
 			{/* Main Content */}
-			<div className="flex flex-1 flex-col items-center justify-center p-4">
-				<div className="w-full max-w-4xl space-y-8">
+			<div className="flex flex-1 flex-col items-center overflow-hidden p-4">
+				<div className="w-full max-w-6xl space-y-8">
 					{/* Refinement Questions */}
 					{showRefinement && (
 						<RefinementQuestions
@@ -107,7 +160,7 @@ export function ChatInterface() {
 					)}
 
 					{/* Welcome Message */}
-					{!showRefinement && !isGenerating && (
+					{!showRefinement && !isGenerating && messages.length === 1 && (
 						<div className="space-y-4 text-center">
 							<h2 className="font-medium font-serif text-[32px] text-foreground md:text-[40px]">
 								What would you like to research today?
@@ -118,6 +171,38 @@ export function ChatInterface() {
 							</p>
 						</div>
 					)}
+
+					{/* Messages */}
+					<div className="flex-1 space-y-6">
+						{messages.map((msg) => (
+							<div key={msg.id} className="w-full">
+								{msg.role === "user" ? (
+									<div className="flex justify-end">
+										<div className="max-w-[80%] rounded-lg bg-primary p-4 text-white">
+											<div className="prose prose-invert max-w-none [&_*]:text-white">
+												<MarkdownContent content={msg.content} />
+											</div>
+										</div>
+									</div>
+								) : (
+									<div className="w-full">
+										{msg.showTabs ? (
+											<div className="space-y-4">
+												<div className="rounded-lg bg-muted/50 p-4">
+													<MarkdownContent content={msg.content} />
+												</div>
+												<ModelResponseTabs />
+											</div>
+										) : (
+											<div className="rounded-lg bg-muted p-4">
+												<MarkdownContent content={msg.content} />
+											</div>
+										)}
+									</div>
+								)}
+							</div>
+						))}
+					</div>
 
 					{/* Research Status */}
 					{isGenerating && (

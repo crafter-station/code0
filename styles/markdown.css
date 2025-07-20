@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.prose {
+	max-width: 65ch;
+	@apply text-gray-900 dark:text-gray-100;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+	@apply text-gray-900 dark:text-gray-100 font-bold;
+}
+
+.prose p {
+	@apply mb-4;
+}
+
+.prose a {
+	@apply text-blue-600 hover:underline;
+}
+
+.prose ul {
+	@apply list-disc pl-4;
+}
+
+.prose ol {
+	@apply list-decimal pl-4;
+}
+
+.prose blockquote {
+	@apply border-l-4 border-gray-200 pl-4 italic;
+}
+
+.prose code {
+	@apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+}
+
+.prose pre {
+	@apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4;
+}
+
+.prose img {
+	@apply rounded-lg;
+}
+
+.prose table {
+	@apply w-full text-left border-collapse;
+}
+
+.prose th,
+.prose td {
+	@apply border p-2 border-gray-200 dark:border-gray-700;
+}
+
+.prose th {
+	@apply bg-gray-50 dark:bg-gray-800;
+}
