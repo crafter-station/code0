@@ -165,7 +165,7 @@ export function ResearchSidebar({
 									<SidebarMenuItem key={item.id}>
 										<SidebarMenuButton
 											size="lg"
-											className="justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
+											className="h-16 justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
 											tooltip={item.title}
 										>
 											<a
