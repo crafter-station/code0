@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 interface EnvVariable {
@@ -45,8 +46,15 @@ export default function Home() {
 		<div className="min-h-screen bg-background">
 			{/* Top Navigation */}
 			<nav className="border-border/40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-				<div className="container flex h-16 items-center justify-center">
+				<div className="container flex h-16 items-center justify-between">
 					<h1 className="font-bold text-2xl tracking-tight">code0</h1>
+					<div className="flex items-center gap-4">
+						<Link href="/research">
+							<Button variant="outline" className="rounded-xl">
+								Deep Research Pipeline
+							</Button>
+						</Link>
+					</div>
 				</div>
 			</nav>
 
