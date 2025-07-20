@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
-	{ params }: { params: { researchId: string } },
+	{ params }: { params: Promise<{ researchId: string }> },
 ) {
-	const researchId = params.researchId;
+	const { researchId } = await params;
 	console.log("API: Looking for research with ID:", researchId);
 
 	try {

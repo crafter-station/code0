@@ -311,11 +311,14 @@ export async function startMultiProviderResearchAction(
 				: undefined,
 		});
 
+		// The actual research ID used in Redis includes the prefix
+		const actualResearchId = `multi_research_${handle.id}`;
+
 		state.output = {
 			success: true,
 			data: {
-				researchId: handle.id,
-				message: `Multi-provider research started with ID: ${handle.id}`,
+				researchId: actualResearchId,
+				message: `Multi-provider research started with ID: ${actualResearchId}`,
 			},
 		};
 	} catch (err) {
