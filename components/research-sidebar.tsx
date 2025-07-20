@@ -1,6 +1,13 @@
 "use client";
 
-import { CrafterIcon, GithubIcon } from "@/components/icons";
+import {
+	AnthropicIcon,
+	CrafterIcon,
+	GeminiIcon,
+	GithubIcon,
+	OpenAIIcon,
+	XAIIcon,
+} from "@/components/icons";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -20,6 +27,7 @@ import {
 	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
+import type { ProviderName } from "@/lib/ai-providers";
 import { useClerk, useUser } from "@clerk/nextjs";
 import {
 	ChevronUp,
@@ -27,6 +35,7 @@ import {
 	MessageSquare,
 	Plus,
 	Settings,
+	Sparkles,
 	User,
 } from "lucide-react";
 import type * as React from "react";
@@ -37,7 +46,19 @@ interface ResearchItem {
 	title: string;
 	timestamp: string;
 	status: string;
+	type?: "single" | "multi-provider";
+	providers?: ProviderName[];
 }
+
+const ProviderIcons: Record<
+	ProviderName,
+	React.ComponentType<{ className?: string }>
+> = {
+	openai: OpenAIIcon,
+	anthropic: AnthropicIcon,
+	google: GeminiIcon,
+	xai: XAIIcon,
+};
 
 function formatTimestamp(timestamp: string): string {
 	const date = new Date(timestamp);
@@ -136,30 +157,64 @@ export function ResearchSidebar({
 						</p>
 					) : researchItems.length > 0 ? (
 						<SidebarMenu>
-							{researchItems.map((item) => (
-								<SidebarMenuItem key={item.id}>
-									<SidebarMenuButton
-										size="lg"
-										className="justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
-										tooltip={item.title}
-									>
-										<a
-											href={`/chat/${item.id}`}
-											className="flex flex-row items-center gap-2"
+							{researchItems.map((item) => {
+								const isMultiProvider = item.type === "multi-provider";
+								const providers = item.providers || [];
+
+								return (
+									<SidebarMenuItem key={item.id}>
+										<SidebarMenuButton
+											size="lg"
+											className="justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
+											tooltip={item.title}
 										>
-											<MessageSquare className="h-4 w-4 text-muted-foreground" />
-											<div className="flex flex-col items-start gap-1 group-data-[collapsible=icon]:hidden">
-												<span className="w-full max-w-[22ch] truncate text-ellipsis font-medium text-foreground text-sm">
-													{item.title}
-												</span>
-												<span className="text-muted-foreground text-xs">
-													{formatTimestamp(item.timestamp)}
-												</span>
-											</div>
-										</a>
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							))}
+											<a
+												href={`/chat/${item.id}`}
+												className="flex w-full flex-row items-center gap-2"
+											>
+												{isMultiProvider ? (
+													<Sparkles className="h-4 w-4 text-primary" />
+												) : (
+													<MessageSquare className="h-4 w-4 text-muted-foreground" />
+												)}
+												<div className="flex flex-1 flex-col items-start gap-1 group-data-[collapsible=icon]:hidden">
+													<div className="flex w-full items-center gap-2">
+														<span className="max-w-[16ch] flex-1 truncate text-ellipsis font-medium text-foreground text-sm">
+															{item.title}
+														</span>
+														{isMultiProvider && (
+															<div className="flex items-center gap-1">
+																{providers.slice(0, 3).map((provider) => {
+																	const IconComponent = ProviderIcons[provider];
+																	return IconComponent ? (
+																		<IconComponent
+																			key={provider}
+																			className="h-3 w-3"
+																		/>
+																	) : null;
+																})}
+																{providers.length > 3 && (
+																	<span className="text-muted-foreground text-xs">
+																		+{providers.length - 3}
+																	</span>
+																)}
+															</div>
+														)}
+													</div>
+													<span className="text-muted-foreground text-xs">
+														{formatTimestamp(item.timestamp)}
+													</span>
+													{isMultiProvider && (
+														<span className="font-medium text-primary text-xs">
+															Ultra Deep Research
+														</span>
+													)}
+												</div>
+											</a>
+										</SidebarMenuButton>
+									</SidebarMenuItem>
+								);
+							})}
 						</SidebarMenu>
 					) : (
 						<p className="text-left text-base text-muted-foreground group-data-[collapsible=icon]:hidden">

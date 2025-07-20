@@ -141,8 +141,33 @@ export function ChatInterface() {
 			);
 
 			if (result.output.success) {
-				// Redirect to the research page with the ID
-				router.push(`/chat/${result.output.data.researchId}`);
+				console.log("Research started successfully:", result.output.data);
+
+				// Verify the research exists before redirecting
+				const researchId = result.output.data.researchId;
+				console.log("Checking research existence for ID:", researchId);
+
+				try {
+					const verifyResponse = await fetch(`/api/research/${researchId}`);
+					if (verifyResponse.ok) {
+						console.log(
+							"Research verified, redirecting to:",
+							`/chat/${researchId}`,
+						);
+						router.push(`/chat/${researchId}`);
+					} else {
+						console.warn(
+							"Research not found immediately, will redirect anyway (polling will handle)",
+						);
+						router.push(`/chat/${researchId}`);
+					}
+				} catch (verifyError) {
+					console.warn(
+						"Error verifying research, redirecting anyway:",
+						verifyError,
+					);
+					router.push(`/chat/${researchId}`);
+				}
 			} else {
 				// Handle error case
 				console.error("Research failed:", result.output.error);

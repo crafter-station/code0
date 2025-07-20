@@ -61,7 +61,9 @@ export async function saveResearchState(state: ResearchState): Promise<void> {
 		console.error("Failed to save research state:", error);
 		console.error("State object:", state);
 		throw new Error(
-			`Failed to save research state: ${error instanceof Error ? error.message : String(error)}`,
+			`Failed to save research state: ${
+				error instanceof Error ? error.message : String(error)
+			}`,
 		);
 	}
 }
@@ -215,6 +217,10 @@ export async function listResearchStates(
 	pattern = "research:*",
 ): Promise<string[]> {
 	const keys = await redis.keys(pattern);
+	// Remove the appropriate prefix based on the pattern
+	if (pattern.startsWith("multi_research:")) {
+		return keys.map((key) => key.replace("multi_research:", ""));
+	}
 	return keys.map((key) => key.replace("research:", ""));
 }
 
@@ -250,12 +256,20 @@ export async function getMultiProviderResearchState(
 	const key = getMultiProviderKey(researchId);
 	try {
 		console.log(`Multi-provider Redis key for ${researchId}: ${key}`);
+
+		// Check if key exists first
+		const exists = await redis.exists(key);
+		console.log(`Key ${key} exists: ${exists === 1}`);
+
 		const data = await redis.get(key);
 
 		if (!data) {
 			console.log(
 				`No multi-provider research state found for ID: ${researchId}`,
 			);
+			// List all keys to help debug
+			const allKeys = await redis.keys("multi_research:*");
+			console.log("Available multi-provider keys:", allKeys);
 			return null;
 		}
 
