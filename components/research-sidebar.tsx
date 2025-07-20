@@ -30,36 +30,60 @@ import {
 	User,
 } from "lucide-react";
 import type * as React from "react";
+import { useEffect, useState } from "react";
 
-// Mock data for previous chats
-const mockChats = [
-	{
-		id: "1",
-		title: "Climate Change Impact on Agriculture",
-		timestamp: "2 hours ago",
-	},
-	{
-		id: "2",
-		title: "Quantum Computing Applications",
-		timestamp: "1 day ago",
-	},
-	{
-		id: "3",
-		title: "AI Ethics in Healthcare",
-		timestamp: "3 days ago",
-	},
-	{
-		id: "4",
-		title: "Renewable Energy Storage Solutions",
-		timestamp: "1 week ago",
-	},
-];
+interface ResearchItem {
+	id: string;
+	title: string;
+	timestamp: string;
+	status: string;
+}
+
+function formatTimestamp(timestamp: string): string {
+	const date = new Date(timestamp);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+	const diffDays = Math.floor(diffHours / 24);
+
+	if (diffHours < 1) return "Just now";
+	if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+	if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+	if (diffDays < 30)
+		return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? "s" : ""} ago`;
+	return date.toLocaleDateString();
+}
 
 export function ResearchSidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
 	const { user } = useUser();
 	const { signOut } = useClerk();
+	const [researchItems, setResearchItems] = useState<ResearchItem[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const fetchResearchItems = async () => {
+			try {
+				setIsLoading(true);
+				setError(null);
+				const response = await fetch("/api/research/list");
+				if (!response.ok) {
+					throw new Error("Failed to fetch research items");
+				}
+				const data = await response.json();
+				setResearchItems(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Unknown error");
+				console.error("Failed to fetch research items:", err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchResearchItems();
+	}, []);
 
 	const handleSignOut = () => {
 		signOut({ redirectUrl: "/" });
@@ -102,26 +126,34 @@ export function ResearchSidebar({
 						Your reports
 					</SidebarGroupLabel>
 
-					{mockChats.length > 0 ? (
+					{isLoading ? (
+						<p className="text-left text-base text-muted-foreground group-data-[collapsible=icon]:hidden">
+							Loading...
+						</p>
+					) : error ? (
+						<p className="text-left text-base text-destructive group-data-[collapsible=icon]:hidden">
+							Error: {error}
+						</p>
+					) : researchItems.length > 0 ? (
 						<SidebarMenu>
-							{mockChats.map((chat) => (
-								<SidebarMenuItem key={chat.id}>
+							{researchItems.map((item) => (
+								<SidebarMenuItem key={item.id}>
 									<SidebarMenuButton
 										size="lg"
 										className="justify-start hover:bg-accent hover:text-accent-foreground group-data-[collapsible=icon]:justify-center"
-										tooltip={chat.title}
+										tooltip={item.title}
 									>
 										<a
-											href={`/chat/${chat.id}`}
+											href={`/chat/${item.id}`}
 											className="flex flex-row items-center gap-2"
 										>
 											<MessageSquare className="h-4 w-4 text-muted-foreground" />
 											<div className="flex flex-col items-start gap-1 group-data-[collapsible=icon]:hidden">
 												<span className="w-full max-w-[22ch] truncate text-ellipsis font-medium text-foreground text-sm">
-													{chat.title}
+													{item.title}
 												</span>
 												<span className="text-muted-foreground text-xs">
-													{chat.timestamp}
+													{formatTimestamp(item.timestamp)}
 												</span>
 											</div>
 										</a>
@@ -131,7 +163,7 @@ export function ResearchSidebar({
 						</SidebarMenu>
 					) : (
 						<p className="text-left text-base text-muted-foreground group-data-[collapsible=icon]:hidden">
-							No chats yet.
+							No research reports yet.
 						</p>
 					)}
 				</SidebarGroup>
