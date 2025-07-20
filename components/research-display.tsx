@@ -25,6 +25,8 @@ import {
 	Loader2,
 } from "lucide-react";
 import Link from "next/link";
+import { useQueryState } from "nuqs";
+import { useEffect, useState } from "react";
 
 const ProviderIcons: Record<
 	ProviderName,
@@ -39,19 +41,56 @@ const ProviderIcons: Record<
 interface ResearchDisplayProps {
 	researchType: "single" | "multi-provider";
 	data: ResearchState | MultiProviderResearchState;
+	researchId: string;
 }
 
-export function ResearchDisplay({ researchType, data }: ResearchDisplayProps) {
+export function ResearchDisplay({
+	researchType,
+	data,
+	researchId,
+}: ResearchDisplayProps) {
 	if (researchType === "single") {
-		return <SingleResearchDisplay data={data as ResearchState} />;
+		return (
+			<SingleResearchDisplay
+				data={data as ResearchState}
+				researchId={researchId}
+			/>
+		);
 	}
 
 	return (
-		<MultiProviderResearchDisplay data={data as MultiProviderResearchState} />
+		<MultiProviderResearchDisplay
+			data={data as MultiProviderResearchState}
+			researchId={researchId}
+		/>
 	);
 }
 
-function SingleResearchDisplay({ data }: { data: ResearchState }) {
+function SingleResearchDisplay({
+	data: initialData,
+	researchId,
+}: { data: ResearchState; researchId: string }) {
+	const [data, setData] = useState(initialData);
+
+	useEffect(() => {
+		if (data.status === "completed" || data.status === "failed") return;
+
+		const interval = setInterval(async () => {
+			try {
+				const response = await fetch(`/api/research/${researchId}`);
+				if (response.ok) {
+					const result = await response.json();
+					if (result.type === "single") {
+						setData(result.data);
+					}
+				}
+			} catch (error) {
+				console.error("Error polling research:", error);
+			}
+		}, 5000);
+
+		return () => clearInterval(interval);
+	}, [researchId, data.status]);
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case "completed":
@@ -74,7 +113,7 @@ function SingleResearchDisplay({ data }: { data: ResearchState }) {
 				<div className="container mx-auto px-4 py-4">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-4">
-							<Link href="/">
+							<Link href="/chat">
 								<Button variant="ghost" size="sm">
 									<ArrowLeft className="mr-2 h-4 w-4" />
 									Back
@@ -179,8 +218,33 @@ function SingleResearchDisplay({ data }: { data: ResearchState }) {
 }
 
 function MultiProviderResearchDisplay({
-	data,
-}: { data: MultiProviderResearchState }) {
+	data: initialData,
+	researchId,
+}: { data: MultiProviderResearchState; researchId: string }) {
+	const [data, setData] = useState(initialData);
+	const [provider, setProvider] = useQueryState("provider");
+
+	useEffect(() => {
+		if (data.status === "completed" || data.status === "failed") return;
+
+		const interval = setInterval(async () => {
+			try {
+				const response = await fetch(`/api/research/${researchId}`);
+				if (response.ok) {
+					const result = await response.json();
+					if (result.type === "multi-provider") {
+						setData(result.data);
+					}
+				}
+			} catch (error) {
+				console.error("Error polling research:", error);
+			}
+		}, 5000);
+
+		return () => clearInterval(interval);
+	}, [researchId, data.status]);
+	console.log("MultiProvider Research Data:", { data });
+	console.log("Provider Results:", data.providerResults);
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case "completed":
@@ -288,9 +352,14 @@ function MultiProviderResearchDisplay({
 					{/* Main Content with Tabs */}
 					<div className="lg:col-span-3">
 						<Tabs
-							defaultValue={
-								hasConsolidatedReport ? "consolidated" : providers[0]
+							value={
+								provider && providers.includes(provider as ProviderName)
+									? provider
+									: hasConsolidatedReport
+										? "consolidated"
+										: providers[0]
 							}
+							onValueChange={(value) => setProvider(value)}
 							className="w-full"
 						>
 							<TabsList
@@ -348,6 +417,11 @@ function MultiProviderResearchDisplay({
 								const providerResult = data.providerResults?.[provider];
 								const providerName = provider as ProviderName;
 								const IconComponent = ProviderIcons[providerName];
+
+								console.log({
+									providerName,
+									providerResult,
+								});
 
 								return (
 									<TabsContent key={provider} value={provider}>

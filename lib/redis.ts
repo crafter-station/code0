@@ -323,5 +323,168 @@ export async function updateMultiProviderResearchState(
 		updatedAt: new Date().toISOString(),
 	};
 
+	// Sync individual research results into provider results
+	await syncIndividualResearchToProviderResults(updatedState);
+
 	await saveMultiProviderResearchState(updatedState);
+}
+
+// New function to sync individual research results into multi-provider state
+export async function syncIndividualResearchToProviderResults(
+	multiState: MultiProviderResearchState,
+): Promise<void> {
+	try {
+		console.log(
+			`Syncing individual research for multi-provider: ${multiState.id}`,
+		);
+
+		// Get all research keys to find related individual research
+		const allResearchKeys = await redis.keys("research:*");
+		console.log(`Found ${allResearchKeys.length} research keys for syncing`);
+
+		// Extract base ID for pattern matching
+		const baseId = multiState.id
+			.replace("multi_research_", "")
+			.replace("run_", "");
+		console.log(`Base ID for syncing: ${baseId}`);
+
+		// Get all individual research that matches the query
+		const candidateResearchByQuery: { keyId: string; state: ResearchState }[] =
+			[];
+
+		for (const key of allResearchKeys) {
+			const keyId = key.replace("research:", "");
+			try {
+				const testState = await getResearchState(keyId);
+				if (testState && testState.originalQuery === multiState.originalQuery) {
+					candidateResearchByQuery.push({ keyId, state: testState });
+					console.log(`Found candidate research with matching query: ${keyId}`);
+				}
+			} catch (error) {
+				// Continue searching
+			}
+		}
+
+		console.log(
+			`Found ${candidateResearchByQuery.length} research entries with matching query "${multiState.originalQuery}"`,
+		);
+
+		for (const provider of multiState.providers) {
+			console.log(`Syncing provider: ${provider}`);
+
+			let individualState = null;
+			let foundKey = null;
+
+			// Use any available research that matches the query (since we don't have provider-specific IDs)
+			if (candidateResearchByQuery.length > 0) {
+				// Try to find one that hasn't been used yet, or just use the first one
+				const availableResearch =
+					candidateResearchByQuery.find(
+						(candidate) =>
+							!Object.values(multiState.providerResults || {}).some(
+								(result) => result.createdAt === candidate.state.createdAt,
+							),
+					) || candidateResearchByQuery[0];
+
+				if (availableResearch) {
+					individualState = availableResearch.state;
+					foundKey = availableResearch.keyId;
+					console.log(
+						`Using research for ${provider} with key: ${foundKey} (by query match)`,
+					);
+				}
+			}
+
+			// Update provider results with actual data
+			if (individualState && individualState.status !== "planning") {
+				console.log(
+					`Updating provider result for ${provider} with status: ${individualState.status}`,
+				);
+
+				// Ensure providerResults exists
+				if (!multiState.providerResults) {
+					multiState.providerResults = {};
+				}
+
+				multiState.providerResults[provider] = {
+					provider,
+					plan: individualState.plan,
+					searchResults: individualState.searchResults || [],
+					knowledgeGaps: individualState.knowledgeGaps || [],
+					finalReport: individualState.finalReport,
+					status: individualState.status,
+					iterations: individualState.iterations || 0,
+					createdAt: individualState.createdAt,
+					updatedAt: individualState.updatedAt,
+				};
+
+				console.log(
+					`Successfully synced ${provider}: status=${individualState.status}, sources=${individualState.searchResults?.length || 0}, hasReport=${!!individualState.finalReport}`,
+				);
+			} else {
+				console.log(
+					`No individual research data found for ${provider} or still in planning state`,
+				);
+
+				// Keep existing provider result or create placeholder
+				if (!multiState.providerResults) {
+					multiState.providerResults = {};
+				}
+
+				if (!multiState.providerResults[provider]) {
+					multiState.providerResults[provider] = {
+						provider,
+						plan: undefined,
+						searchResults: [],
+						knowledgeGaps: [],
+						finalReport: undefined,
+						status: "planning",
+						iterations: 0,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+					};
+				}
+			}
+		}
+
+		console.log(`Completed syncing individual research for ${multiState.id}`);
+	} catch (error) {
+		console.error(
+			`Error syncing individual research for ${multiState.id}:`,
+			error,
+		);
+		// Don't throw - let the update continue even if sync fails
+	}
+}
+
+// Function to manually sync all existing multi-provider research
+export async function syncAllMultiProviderResearch(): Promise<void> {
+	try {
+		console.log("Starting manual sync of all multi-provider research...");
+
+		const multiResearchIds = await listResearchStates("multi_research:*");
+		console.log(
+			`Found ${multiResearchIds.length} multi-provider research entries to sync`,
+		);
+
+		for (const researchId of multiResearchIds) {
+			try {
+				const multiState = await getMultiProviderResearchState(researchId);
+				if (multiState) {
+					console.log(`Syncing multi-provider research: ${researchId}`);
+					await syncIndividualResearchToProviderResults(multiState);
+					await saveMultiProviderResearchState(multiState);
+					console.log(`Successfully synced: ${researchId}`);
+				}
+			} catch (error) {
+				console.error(`Failed to sync ${researchId}:`, error);
+				// Continue with next research
+			}
+		}
+
+		console.log("Completed manual sync of all multi-provider research");
+	} catch (error) {
+		console.error("Error during manual sync:", error);
+		throw error;
+	}
 }
