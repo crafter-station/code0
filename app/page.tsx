@@ -14,8 +14,8 @@ import { useState } from "react";
 
 export default function Home() {
 	const router = useRouter();
-	const [isStarting, setIsStarting] = useState(false);
-	const [query, setQuery] = useState("");
+	const [_isStarting, _setIsStarting] = useState(false);
+	const [_query, _setQuery] = useState("");
 
 	const handleStartResearch = async () => {
 		router.push("/chat");

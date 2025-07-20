@@ -45,8 +45,8 @@ export function RefinementQuestions({
 					Answer some questions for a more accurate report
 				</h2>
 				<p className="text-base text-muted-foreground">
-					This is optional, you can skip this by clicking "Generate Report" or
-					"Skip".
+					This is optional, you can skip this by clicking &ldquo;Generate
+					Report&rdquo; or &ldquo;Skip&rdquo;.
 				</p>
 			</CardHeader>
 

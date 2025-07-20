@@ -92,7 +92,7 @@ async function fetchResearchData(
 								);
 								break;
 							}
-						} catch (error) {
+						} catch (_error) {
 							console.log(`Pattern ${pattern} not found for ${provider}`);
 						}
 					}
@@ -115,7 +115,7 @@ async function fetchResearchData(
 										);
 										break;
 									}
-								} catch (error) {
+								} catch (_error) {
 									console.log(`Error checking key ${keyId}:`, error);
 								}
 							}
@@ -241,7 +241,7 @@ async function fetchResearchData(
 								);
 								break;
 							}
-						} catch (error) {
+						} catch (_error) {
 							// Continue searching
 						}
 					}
@@ -292,7 +292,7 @@ async function fetchResearchData(
 		}
 
 		return null;
-	} catch (error) {
+	} catch (_error) {
 		console.error("Failed to fetch research:", error);
 		return null;
 	}

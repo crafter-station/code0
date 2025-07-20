@@ -108,7 +108,7 @@ export function ChatInterface() {
 			let finalQuery = currentQuery;
 			if (Object.keys(questionAnswers).length > 0) {
 				const answersText = Object.entries(questionAnswers)
-					.filter(([_, answer]) => answer.trim())
+					.filter(([_questionId, answer]) => answer.trim())
 					.map(([questionId, answer]) => {
 						const question = questions.find((q) => q.id === questionId);
 						return question ? `${question.question}: ${answer}` : answer;
@@ -284,7 +284,8 @@ export function ChatInterface() {
 							<div className="space-y-2 text-center">
 								<h3 className="font-semibold text-lg">Select AI Models</h3>
 								<p className="text-muted-foreground text-sm">
-									Choose which AI models should research "{currentQuery}"
+									Choose which AI models should research &ldquo;{currentQuery}
+									&rdquo;
 								</p>
 							</div>
 

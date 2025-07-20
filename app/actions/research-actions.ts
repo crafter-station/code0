@@ -15,7 +15,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 
 // Mock auth helper - replace with your actual auth implementation
-async function getUserId(headers: Headers) {
+async function getUserId(_headers: Headers) {
 	// For demo purposes, return a mock user ID
 	// In production, implement proper authentication
 	return { userId: "demo_user_123" };
@@ -54,7 +54,7 @@ export async function startResearchAction(
 		return state;
 	}
 
-	const { userId } = await getUserId(await headers());
+	const { userId: _userId } = await getUserId(await headers());
 
 	try {
 		// Trigger the deep research pipeline
@@ -107,7 +107,7 @@ export async function getResearchStatusAction(
 		return state;
 	}
 
-	const { userId } = await getUserId(await headers());
+	const { userId: _userId } = await getUserId(await headers());
 
 	try {
 		// Get research status directly from Redis
@@ -130,7 +130,7 @@ export async function getResearchStatusAction(
 			};
 		} else {
 			// Fallback to Trigger.dev task if not found in Redis
-			const handle = await getResearchStatus.trigger({
+			const _handle = await getResearchStatus.trigger({
 				researchId: parsed.data.researchId,
 			});
 
@@ -187,7 +187,7 @@ export async function quickResearchAction(
 		return state;
 	}
 
-	const { userId } = await getUserId(await headers());
+	const { userId: _userId } = await getUserId(await headers());
 
 	try {
 		// Create a quick search task instead of direct service calls
@@ -195,12 +195,12 @@ export async function quickResearchAction(
 		const researchId = `quick_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
 		// Import search and AI functions from the task file
-		const { searchTask, writingTask } = await import(
+		const { searchTask, writingTask: _writingTask } = await import(
 			"@/trigger/deep-research-pipeline"
 		);
 
 		// Perform quick search
-		const searchResult = await searchTask.trigger({
+		const _searchResult = await searchTask.trigger({
 			researchId,
 			queries: [parsed.data.query],
 			maxSources: 5,
@@ -289,7 +289,7 @@ export async function startMultiProviderResearchAction(
 		return state;
 	}
 
-	const { userId } = await getUserId(await headers());
+	const { userId: _userId } = await getUserId(await headers());
 
 	try {
 		// Import the multi-provider research pipeline

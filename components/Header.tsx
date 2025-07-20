@@ -1,6 +1,6 @@
+import { Activity, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { UserButton } from "./UserButton";
-import { Activity, Sparkles } from "lucide-react";
 
 export default function Header() {
 	return (
@@ -9,19 +9,19 @@ export default function Header() {
 				<Link href="/">
 					<span className="font-bold text-lg">Ultra Deep Research</span>
 				</Link>
-				
+
 				{/* Ultra Deep Research Navigation */}
-				<div className="hidden md:flex items-center gap-4">
-					<Link 
-						href="/research" 
-						className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+				<div className="hidden items-center gap-4 md:flex">
+					<Link
+						href="/research"
+						className="flex items-center gap-2 px-3 py-2 font-medium text-gray-700 text-sm transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
 					>
 						<Sparkles className="h-4 w-4" />
 						Start Research
 					</Link>
-					<Link 
-						href="/providers/live" 
-						className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+					<Link
+						href="/providers/live"
+						className="flex items-center gap-2 px-3 py-2 font-medium text-gray-700 text-sm transition-colors hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
 					>
 						<Activity className="h-4 w-4" />
 						Live States

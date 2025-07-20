@@ -88,7 +88,7 @@ export async function GET(
 							);
 							break;
 						}
-					} catch (error) {
+					} catch (_error) {
 						// Pattern not found, continue
 					}
 				}
@@ -111,7 +111,7 @@ export async function GET(
 									);
 									break;
 								}
-							} catch (error) {
+							} catch (_error) {
 								// Continue searching
 							}
 						}
@@ -238,7 +238,7 @@ export async function GET(
 								);
 								break;
 							}
-						} catch (error) {
+						} catch (_error) {
 							// Continue searching
 						}
 					}
@@ -289,7 +289,7 @@ export async function GET(
 		}
 
 		return NextResponse.json({ error: "Research not found" }, { status: 404 });
-	} catch (error) {
+	} catch (_error) {
 		console.error("Failed to fetch research:", error);
 		return NextResponse.json(
 			{ error: "Failed to fetch research" },

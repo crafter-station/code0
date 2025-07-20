@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import {
@@ -7,6 +6,7 @@ import {
 	OpenAIIcon,
 	XAIIcon,
 } from "@/components/icons";
+import { MarkdownContent } from "@/components/markdown-content";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -194,11 +194,7 @@ function SingleResearchDisplay({
 						{data.finalReport ? (
 							<Card className="p-6">
 								<h3 className="mb-4 font-semibold text-lg">Research Report</h3>
-								<div className="prose prose-sm max-w-none">
-									<div className="whitespace-pre-wrap leading-relaxed">
-										{data.finalReport}
-									</div>
-								</div>
+								<MarkdownContent content={data.finalReport} />
 							</Card>
 						) : (
 							<Card className="border-dashed p-6">
@@ -277,8 +273,26 @@ function MultiProviderResearchDisplay({
 								</Button>
 							</Link>
 							<div>
-								<h1 className="font-semibold text-lg">Ultra Deep Research</h1>
-								<p className="max-w-md truncate text-muted-foreground text-sm">
+								<div className="flex items-center gap-2">
+									<h1 className="font-semibold text-lg">Ultra Deep Research</h1>
+									{getStatusIcon(data.status)}
+									<span className="font-medium text-muted-foreground text-sm capitalize">
+										{data.status}
+									</span>
+									{providers.length > 0 && (
+										<span className="text-muted-foreground text-xs">
+											•{" "}
+											{
+												providers.filter(
+													(p) =>
+														data.providerResults?.[p]?.status === "completed",
+												).length
+											}
+											/{providers.length} models complete
+										</span>
+									)}
+								</div>
+								<p className="max-w-2xl truncate text-muted-foreground text-sm">
 									{data.originalQuery}
 								</p>
 							</div>
@@ -303,196 +317,143 @@ function MultiProviderResearchDisplay({
 
 			{/* Content */}
 			<div className="container mx-auto px-4 py-6">
-				<div className="grid gap-6 lg:grid-cols-4">
-					{/* Status Sidebar */}
-					<div className="lg:col-span-1">
-						<Card className="sticky top-24 p-6">
-							<h2 className="mb-4 flex items-center gap-2 font-semibold">
-								{getStatusIcon(data.status)}
-								Progress
-							</h2>
-
-							<div className="mb-6">
-								<div className="mb-2 text-muted-foreground text-xs">
-									Overall Status
-								</div>
-								<div className="font-medium text-sm capitalize">
-									{data.status}
-								</div>
-							</div>
-
-							{/* Provider Status */}
-							<div className="space-y-4">
-								<h3 className="font-medium text-sm">AI Models</h3>
-								{providers.map((provider) => {
-									const providerName = provider as ProviderName;
-									const IconComponent = ProviderIcons[providerName];
-									const providerResult = data.providerResults?.[provider];
-									const status = providerResult?.status || "planning";
-
-									return (
-										<div
-											key={provider}
-											className="flex items-center justify-between"
-										>
-											<div className="flex items-center gap-2">
-												{IconComponent && <IconComponent className="h-4 w-4" />}
-												<span className="font-medium text-sm">
-													{AI_PROVIDERS[providerName]?.name || provider}
-												</span>
-											</div>
-											{getStatusIcon(status)}
-										</div>
-									);
-								})}
-							</div>
-						</Card>
-					</div>
-
-					{/* Main Content with Tabs */}
-					<div className="lg:col-span-3">
-						<Tabs
-							value={
-								provider && providers.includes(provider as ProviderName)
-									? provider
-									: hasConsolidatedReport
-										? "consolidated"
-										: providers[0]
-							}
-							onValueChange={(value) => setProvider(value)}
-							className="w-full"
+				{/* Main Content with Tabs - Full Width */}
+				<div className="w-full">
+					<Tabs
+						value={
+							provider && providers.includes(provider as ProviderName)
+								? provider
+								: hasConsolidatedReport
+									? "consolidated"
+									: providers[0]
+						}
+						onValueChange={(value) => setProvider(value)}
+						className="w-full"
+					>
+						<TabsList
+							className="mb-6 grid w-full grid-cols-auto"
+							style={{
+								gridTemplateColumns: `repeat(${hasConsolidatedReport ? providers.length + 1 : providers.length}, minmax(0, 1fr))`,
+							}}
 						>
-							<TabsList
-								className="mb-6 grid w-full grid-cols-auto"
-								style={{
-									gridTemplateColumns: `repeat(${hasConsolidatedReport ? providers.length + 1 : providers.length}, minmax(0, 1fr))`,
-								}}
-							>
-								{hasConsolidatedReport && (
+							{hasConsolidatedReport && (
+								<TabsTrigger
+									value="consolidated"
+									className="flex items-center gap-2"
+								>
+									<CheckCircle className="h-4 w-4" />
+									Consolidated Report
+								</TabsTrigger>
+							)}
+							{providers.map((provider) => {
+								const providerName = provider as ProviderName;
+								const IconComponent = ProviderIcons[providerName];
+								const providerResult = data.providerResults?.[provider];
+								const status = providerResult?.status || "planning";
+								return (
 									<TabsTrigger
-										value="consolidated"
+										key={provider}
+										value={provider}
 										className="flex items-center gap-2"
 									>
-										<CheckCircle className="h-4 w-4" />
-										Consolidated Report
+										{IconComponent && <IconComponent className="h-4 w-4" />}
+										{AI_PROVIDERS[providerName]?.name || provider}
+										{getStatusIcon(status)}
 									</TabsTrigger>
-								)}
-								{providers.map((provider) => {
-									const providerName = provider as ProviderName;
-									const IconComponent = ProviderIcons[providerName];
-									return (
-										<TabsTrigger
-											key={provider}
-											value={provider}
-											className="flex items-center gap-2"
-										>
-											{IconComponent && <IconComponent className="h-4 w-4" />}
-											{AI_PROVIDERS[providerName]?.name || provider}
-										</TabsTrigger>
-									);
-								})}
-							</TabsList>
+								);
+							})}
+						</TabsList>
 
-							{/* Consolidated Report Tab */}
-							{hasConsolidatedReport && (
-								<TabsContent value="consolidated">
-									<Card className="border-green-200 bg-green-50/50 p-6">
+						{/* Consolidated Report Tab */}
+						{hasConsolidatedReport && (
+							<TabsContent value="consolidated">
+								<Card className="border-green-200 bg-green-50/50 p-6">
+									<div className="mb-4 flex items-center gap-2">
+										<CheckCircle className="h-5 w-5 text-green-500" />
+										<h3 className="font-semibold text-green-900">
+											Consolidated Ultra Deep Research Report
+										</h3>
+									</div>
+									<MarkdownContent content={data.consolidatedReport || ""} />
+								</Card>
+							</TabsContent>
+						)}
+
+						{/* Individual Provider Tabs */}
+						{providers.map((provider) => {
+							const providerResult = data.providerResults?.[provider];
+							const providerName = provider as ProviderName;
+							const IconComponent = ProviderIcons[providerName];
+
+							console.log({
+								providerName,
+								providerResult,
+							});
+
+							return (
+								<TabsContent key={provider} value={provider}>
+									<Card className="p-6">
 										<div className="mb-4 flex items-center gap-2">
-											<CheckCircle className="h-5 w-5 text-green-500" />
-											<h3 className="font-semibold text-green-900">
-												Consolidated Ultra Deep Research Report
+											{IconComponent && <IconComponent className="h-5 w-5" />}
+											<h3 className="font-semibold">
+												{AI_PROVIDERS[providerName]?.name || provider} Analysis
 											</h3>
+											{getStatusIcon(providerResult?.status || "planning")}
 										</div>
-										<div className="prose prose-sm max-w-none">
-											<div className="whitespace-pre-wrap text-foreground leading-relaxed">
-												{data.consolidatedReport}
+
+										{providerResult?.finalReport ? (
+											<MarkdownContent content={providerResult.finalReport} />
+										) : (
+											<div className="flex items-center gap-3 text-muted-foreground">
+												<Loader2 className="h-4 w-4 animate-spin" />
+												<span>
+													{providerResult?.status === "completed"
+														? "Analysis complete, waiting for final report..."
+														: "Research in progress..."}
+												</span>
 											</div>
+										)}
+
+										{/* Provider Info */}
+										<div className="mt-6 border-border border-t pt-4">
+											<div className="text-muted-foreground text-sm">
+												<strong>Strengths:</strong>{" "}
+												{AI_PROVIDERS[providerName]?.strengths.join(", ")}
+											</div>
+											{providerResult && (
+												<div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+													<div>
+														<div className="text-muted-foreground text-xs">
+															Iterations
+														</div>
+														<div className="font-medium">
+															{providerResult.iterations}
+														</div>
+													</div>
+													<div>
+														<div className="text-muted-foreground text-xs">
+															Sources
+														</div>
+														<div className="font-medium">
+															{providerResult.searchResults?.length || 0}
+														</div>
+													</div>
+													<div>
+														<div className="text-muted-foreground text-xs">
+															Knowledge Gaps
+														</div>
+														<div className="font-medium">
+															{providerResult.knowledgeGaps?.length || 0}
+														</div>
+													</div>
+												</div>
+											)}
 										</div>
 									</Card>
 								</TabsContent>
-							)}
-
-							{/* Individual Provider Tabs */}
-							{providers.map((provider) => {
-								const providerResult = data.providerResults?.[provider];
-								const providerName = provider as ProviderName;
-								const IconComponent = ProviderIcons[providerName];
-
-								console.log({
-									providerName,
-									providerResult,
-								});
-
-								return (
-									<TabsContent key={provider} value={provider}>
-										<Card className="p-6">
-											<div className="mb-4 flex items-center gap-2">
-												{IconComponent && <IconComponent className="h-5 w-5" />}
-												<h3 className="font-semibold">
-													{AI_PROVIDERS[providerName]?.name || provider}{" "}
-													Analysis
-												</h3>
-												{getStatusIcon(providerResult?.status || "planning")}
-											</div>
-
-											{providerResult?.finalReport ? (
-												<div className="prose prose-sm max-w-none">
-													<div className="whitespace-pre-wrap leading-relaxed">
-														{providerResult.finalReport}
-													</div>
-												</div>
-											) : (
-												<div className="flex items-center gap-3 text-muted-foreground">
-													<Loader2 className="h-4 w-4 animate-spin" />
-													<span>
-														{providerResult?.status === "completed"
-															? "Analysis complete, waiting for final report..."
-															: "Research in progress..."}
-													</span>
-												</div>
-											)}
-
-											{/* Provider Info */}
-											<div className="mt-6 border-border border-t pt-4">
-												<div className="text-muted-foreground text-sm">
-													<strong>Strengths:</strong>{" "}
-													{AI_PROVIDERS[providerName]?.strengths.join(", ")}
-												</div>
-												{providerResult && (
-													<div className="mt-2 grid grid-cols-3 gap-4 text-sm">
-														<div>
-															<div className="text-muted-foreground text-xs">
-																Iterations
-															</div>
-															<div className="font-medium">
-																{providerResult.iterations}
-															</div>
-														</div>
-														<div>
-															<div className="text-muted-foreground text-xs">
-																Sources
-															</div>
-															<div className="font-medium">
-																{providerResult.searchResults?.length || 0}
-															</div>
-														</div>
-														<div>
-															<div className="text-muted-foreground text-xs">
-																Knowledge Gaps
-															</div>
-															<div className="font-medium">
-																{providerResult.knowledgeGaps?.length || 0}
-															</div>
-														</div>
-													</div>
-												)}
-											</div>
-										</Card>
-									</TabsContent>
-								);
-							})}
-						</Tabs>
-					</div>
+							);
+						})}
+					</Tabs>
 				</div>
 			</div>
 		</div>

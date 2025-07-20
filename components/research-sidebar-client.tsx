@@ -30,6 +30,7 @@ import {
 import type { ProviderName } from "@/lib/ai-providers";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { ChevronUp, LogOut, Plus, Settings, User } from "lucide-react";
+import Link from "next/link";
 import type * as React from "react";
 import { useState } from "react";
 
@@ -86,7 +87,7 @@ export function ResearchSidebarClient({
 	const { user } = useUser();
 	const { signOut } = useClerk();
 	// Only show multi-provider research items
-	const [researchItems, setResearchItems] = useState<ResearchItem[]>(
+	const [researchItems, _setResearchItems] = useState<ResearchItem[]>(
 		initialData.filter(
 			(item) => item.type === "multi-provider" && !item.parentId,
 		),
@@ -101,7 +102,7 @@ export function ResearchSidebarClient({
 			<SidebarHeader>
 				<div className="flex flex-col gap-2">
 					<div className="flex flex-row items-center justify-center py-2">
-						<a className="flex flex-row items-center gap-2" href="/">
+						<Link className="flex flex-row items-center gap-2" href="/">
 							<div className="flex flex-row items-center gap-2">
 								<div className="text-foreground">
 									<CrafterIcon className="size-6" />
@@ -110,7 +111,7 @@ export function ResearchSidebarClient({
 									Ultra Deep Research
 								</span>
 							</div>
-						</a>
+						</Link>
 					</div>
 
 					<SidebarMenuButton
