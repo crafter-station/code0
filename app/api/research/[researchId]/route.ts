@@ -290,7 +290,7 @@ export async function GET(
 
 		return NextResponse.json({ error: "Research not found" }, { status: 404 });
 	} catch (_error) {
-		console.error("Failed to fetch research:", error);
+		console.error("Failed to fetch research:", _error);
 		return NextResponse.json(
 			{ error: "Failed to fetch research" },
 			{ status: 500 },

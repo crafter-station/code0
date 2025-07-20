@@ -116,7 +116,7 @@ async function fetchResearchData(
 										break;
 									}
 								} catch (_error) {
-									console.log(`Error checking key ${keyId}:`, error);
+									console.log(`Error checking key ${keyId}:`, _error);
 								}
 							}
 						}
@@ -293,7 +293,7 @@ async function fetchResearchData(
 
 		return null;
 	} catch (_error) {
-		console.error("Failed to fetch research:", error);
+		console.error("Failed to fetch research:", _error);
 		return null;
 	}
 }

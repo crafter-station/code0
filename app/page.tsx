@@ -60,7 +60,7 @@ export default function Home() {
 							onClick={handleStartResearch}
 							className="gap-1.5 rounded-lg border-[0.5px] px-6 py-3"
 						>
-							{isStarting ? (
+							{_isStarting ? (
 								<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
 							) : (
 								<p className="font-medium text-base">Start Research</p>
