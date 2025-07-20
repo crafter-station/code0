@@ -174,19 +174,19 @@ export default function ResearchPage() {
 								</div>
 							</div>
 
-							{multiProviderState.output.error && (
+							{!multiProviderState.output.success && multiProviderState.output.error && (
 								<div className="text-destructive text-sm">
 									{multiProviderState.output.error}
 								</div>
 							)}
 
-							{multiProviderState.output.researchId && (
+							{multiProviderState.output.success && multiProviderState.output.data && (
 								<div className="space-y-2">
 									<div className="text-green-600 text-sm">
 										✅ Ultra deep research started successfully!
 									</div>
 									<a
-										href={`/chat/${multiProviderState.output.researchId}`}
+										href={`/chat/${multiProviderState.output.data.researchId}`}
 										className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm"
 									>
 										View Progress →
@@ -486,6 +486,7 @@ export default function ResearchPage() {
 						</div>
 					</CardContent>
 				</Card>
+			</div>
 			</div>
 		</div>
 	);
