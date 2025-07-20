@@ -2,6 +2,13 @@
 
 import { CrafterIcon, GithubIcon } from "@/components/icons";
 import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
 	Sidebar,
 	SidebarContent,
 	SidebarFooter,
@@ -13,7 +20,15 @@ import {
 	SidebarMenuItem,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-import { MessageSquare, Plus } from "lucide-react";
+import { useClerk, useUser } from "@clerk/nextjs";
+import {
+	ChevronUp,
+	LogOut,
+	MessageSquare,
+	Plus,
+	Settings,
+	User,
+} from "lucide-react";
 import type * as React from "react";
 
 // Mock data for previous chats
@@ -43,6 +58,13 @@ const mockChats = [
 export function ResearchSidebar({
 	...props
 }: React.ComponentProps<typeof Sidebar>) {
+	const { user } = useUser();
+	const { signOut } = useClerk();
+
+	const handleSignOut = () => {
+		signOut({ redirectUrl: "/" });
+	};
+
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
@@ -137,19 +159,58 @@ export function ResearchSidebar({
 				</div>
 
 				<div className="flex flex-row items-center gap-2 border-border border-t px-5 pt-3">
-					<SidebarMenuButton
-						tooltip="Railly Hugo"
-						className="w-full justify-start p-0"
-					>
-						<div className="flex items-center gap-2">
-							<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-chart-1 font-medium text-primary-foreground text-sm">
-								RH
-							</div>
-							<span className="font-medium text-foreground text-sm group-data-[collapsible=icon]:hidden">
-								Railly Hugo
-							</span>
-						</div>
-					</SidebarMenuButton>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<SidebarMenuButton
+								tooltip={
+									user?.fullName ||
+									user?.emailAddresses[0]?.emailAddress ||
+									"User"
+								}
+								className="w-full justify-start p-0 data-[state=open]:bg-accent"
+							>
+								<div className="flex w-full items-center justify-between gap-2">
+									<div className="flex items-center gap-2">
+										<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-chart-1 font-medium text-primary-foreground text-sm">
+											{user?.firstName?.charAt(0) ||
+												user?.emailAddresses[0]?.emailAddress?.charAt(0) ||
+												"U"}
+										</div>
+										<span className="font-medium text-foreground text-sm group-data-[collapsible=icon]:hidden">
+											{user?.firstName ||
+												user?.emailAddresses[0]?.emailAddress?.split("@")[0] ||
+												"User"}
+										</span>
+									</div>
+									<ChevronUp className="h-4 w-4 text-muted-foreground group-data-[collapsible=icon]:hidden" />
+								</div>
+							</SidebarMenuButton>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent side="top" align="end" className="w-56">
+							<DropdownMenuItem className="flex items-center gap-2">
+								<User className="h-4 w-4" />
+								<div className="flex flex-col">
+									<span className="text-sm">{user?.fullName || "User"}</span>
+									<span className="text-muted-foreground text-xs">
+										{user?.emailAddresses[0]?.emailAddress}
+									</span>
+								</div>
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem className="flex items-center gap-2">
+								<Settings className="h-4 w-4" />
+								Settings
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								className="flex items-center gap-2 text-destructive focus:text-destructive"
+								onClick={handleSignOut}
+							>
+								<LogOut className="h-4 w-4" />
+								Sign out
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			</SidebarFooter>
 
