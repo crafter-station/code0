@@ -1,5 +1,3 @@
-"use server";
-
 import {
 	AI_PROVIDERS,
 	type ProviderName,

@@ -1,5 +1,11 @@
 "use server";
 
+import type {
+	GetResearchStatusActionState,
+	MultiProviderResearchActionState,
+	QuickResearchActionState,
+	StartResearchActionState,
+} from "@/lib/action-types";
 import { getResearchState } from "@/lib/redis";
 import {
 	deepResearchPipeline,
@@ -14,16 +20,6 @@ async function getUserId(headers: Headers) {
 	// In production, implement proper authentication
 	return { userId: "demo_user_123" };
 }
-
-export type StartResearchActionState = {
-	input: {
-		query: string;
-		depth: "quick" | "surface" | "deep" | "comprehensive";
-	};
-	output:
-		| { success: true; data: { researchId: string; message: string } }
-		| { success: false; error?: string };
-};
 
 export async function startResearchAction(
 	_prev: StartResearchActionState,
@@ -83,28 +79,6 @@ export async function startResearchAction(
 
 	return state;
 }
-
-export type GetResearchStatusActionState = {
-	input: {
-		researchId: string;
-	};
-	output:
-		| {
-				success: true;
-				data: {
-					status: string;
-					originalQuery: string;
-					iterations: number;
-					sourcesCount: number;
-					gapsCount: number;
-					hasReport: boolean;
-					createdAt: string;
-					updatedAt: string;
-					finalReport?: string;
-				};
-		  }
-		| { success: false; error?: string };
-};
 
 export async function getResearchStatusAction(
 	_prev: GetResearchStatusActionState,
@@ -185,26 +159,6 @@ export async function getResearchStatusAction(
 
 	return state;
 }
-
-export type QuickResearchActionState = {
-	input: {
-		query: string;
-	};
-	output:
-		| {
-				success: true;
-				data: {
-					summary: string;
-					sources: Array<{
-						title: string;
-						url: string;
-						snippet: string;
-						relevanceScore: number;
-					}>;
-				};
-		  }
-		| { success: false; error?: string };
-};
 
 export async function quickResearchAction(
 	_prev: QuickResearchActionState,
@@ -299,16 +253,6 @@ export async function quickResearchAction(
 }
 
 // Multi-provider research action
-export type MultiProviderResearchActionState = {
-	input: {
-		query: string;
-		depth: "quick" | "surface" | "deep" | "comprehensive";
-		enabledProviders?: string[];
-	};
-	output:
-		| { success: true; data: { researchId: string; message: string } }
-		| { success: false; error?: string };
-};
 
 export async function startMultiProviderResearchAction(
 	_prev: MultiProviderResearchActionState,

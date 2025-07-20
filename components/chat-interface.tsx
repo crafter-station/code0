@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
+import type { MultiProviderResearchActionState } from "@/lib/action-types";
 import { AI_PROVIDERS, type ProviderName } from "@/lib/ai-providers";
 import {
 	type RefinementQuestionsType,
@@ -135,7 +136,7 @@ export function ChatInterface() {
 						enabledProviders: selectedProviders,
 					},
 					output: { success: false },
-				},
+				} as MultiProviderResearchActionState,
 				formData,
 			);
 
